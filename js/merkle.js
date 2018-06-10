@@ -20,27 +20,30 @@ import { sha3 } from 'ethereumjs-util'
 // Expects elements to be Buffers of length 32
 // Empty string elements will be removed prior to the buffer check
 // by default, order is not preserved
-function MerkleTree(elements, preserveOrder) {
-  if (!(this instanceof MerkleTree)) {
-    return new MerkleTree(elements, preserveOrder)
-  }
+function MerkleTree(elements, preserveOrder, allowDuplications) {
+    if (!(this instanceof MerkleTree)) {
+        return new MerkleTree(elements, preserveOrder, allowDuplications);
+    }
 
-  // remove empty strings
-  this.elements = elements.filter(a => a)
+    // remove empty strings
+    this.elements = elements.filter(a => a);
 
-  // check buffers
-  if (this.elements.some((e) => !(e.length == 32 && Buffer.isBuffer(e)))) {
-    throw new Error('elements must be 32 byte buffers')
-  }
+    // check buffers
+    if (this.elements.some(e => !(e.length == 32 && Buffer.isBuffer(e)))) {
+        throw new Error('elements must be 32 byte buffers');
+    }
 
-  // if we are not preserving order, dedup and sort
-  this.preserveOrder = !!preserveOrder
-  if (!this.preserveOrder) {
-    this.elements = bufDedup(this.elements)
-    this.elements.sort(Buffer.compare)
-  }
+    // if we are not preserving order, dedup and sort
+    this.preserveOrder = !!preserveOrder;
+    this.allowDuplications = !!allowDuplications
+    if (!this.preserveOrder) {
+      if(!this.allowDuplications){
+          this.elements = bufDedup(this.elements);
+      }
+      this.elements.sort(Buffer.compare);
+    }
 
-  this.layers = getLayers(this.elements, this.preserveOrder)
+    this.layers = getLayers(this.elements, this.preserveOrder);
 }
 
 MerkleTree.prototype.getRoot = function() {
